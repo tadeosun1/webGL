@@ -1,34 +1,36 @@
 <!DOCTYPE html>
 <html lang="en-us">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>VOA</title>
-    <link rel="shortcut icon" href="icon/favicon.ico">
-    <link rel="stylesheet" href="css/style.css">
-    <script src="js/on-window-resized.js"></script> 
-  </head>
-  <body class="dark">
-    <div id="app-wrapper">
-      <div id="unity-container-size-reference" class="unity-desktop"></div>
-      <div id="unity-container" class="unity-desktop">
-        <canvas id="unity-canvas"></canvas>
-        <div id="loading-cover" style="display:none;">
-          <div id="unity-loading-bar">
-            <div id="unity-logo"><img src="logo.png"></div>
-            <div id="unity-progress-bar-empty" style="display: none;">
-              <div id="unity-progress-bar-full"></div>
-            </div>
-            <div class="spinner"></div>
+
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>VOA</title>
+  <link rel="shortcut icon" href="icon/favicon.ico" />
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="js/on-window-resized.js"></script>
+</head>
+
+<body class="dark">
+  <div id="app-wrapper">
+    <div id="unity-container-size-reference" class="unity-desktop"></div>
+    <div id="unity-container" class="unity-desktop">
+      <canvas id="unity-canvas"></canvas>
+      <div id="loading-cover" style="display: none">
+        <div id="loading-bar">
+          <div id="logo"><img src="logo.png" /></div>
+          <div id="progress-bar-empty" style="display: none">
+            <div id="progress-bar-full"></div>
           </div>
+          <div id="spinner"></div>
+          <p id="loading-message"></p>
         </div>
       </div>
     </div>
     <script>
-      const minWidth = "400";
-      const minHeight = "300";
-      const resizeDelay = "1000";
+      const minWidth = '400';
+      const minHeight = '300';
+      const resizeDelay = '1000';
     </script>
     <script>
       const buildUrl = "Build";
@@ -46,9 +48,10 @@
       const container = document.querySelector("#unity-container");
       const canvas = document.querySelector("#unity-canvas");
       const loadingCover = document.querySelector("#loading-cover");
-      const progressBarEmpty = document.querySelector("#unity-progress-bar-empty");
-      const progressBarFull = document.querySelector("#unity-progress-bar-full");
-      const spinner = document.querySelector('.spinner');
+      const progressBarEmpty = document.querySelector("#progress-bar-empty");
+      const progressBarFull = document.querySelector("#progress-bar-full");
+      const spinner = document.querySelector('#spinner');
+      const message = document.querySelector('#loading-message');
 
       if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
         container.className = "unity-mobile";
@@ -56,14 +59,28 @@
       }
       loadingCover.style.display = "";
 
+      function progressHandler(progress) {
+        spinner.style.display = "none";
+        progressBarEmpty.style.display = "";
+
+        // at progress value of 90%, build switches from downloading files to launching runtime
+        var downloadProgress = progress * (1 / 0.9);
+        var clampedProgress = Math.max(downloadProgress, 1);
+        progressBarFull.style.width = `${100 * clampedProgress}%`;
+
+        message.innerHTML = "Downloading files";
+
+        if (progress >= 0.9) {
+          spinner.style.display = "";
+          progressBarEmpty.style.display = "none";
+          message.innerHTML = "Starting";
+        }
+      }
+
       const script = document.createElement("script");
       script.src = loaderUrl;
       script.onload = () => {
-        createUnityInstance(canvas, config, (progress) => {
-          spinner.style.display = "none";
-          progressBarEmpty.style.display = "";
-          progressBarFull.style.width = `${100 * progress}%`;
-        }).then((unityInstance) => {
+        createUnityInstance(canvas, config, progressHandler).then((unityInstance) => {
           loadingCover.style.display = "none";
         }).catch((message) => {
           alert(message);
@@ -71,5 +88,6 @@
       };
       document.body.appendChild(script);
     </script>
-  </body>
+</body>
+
 </html>
